@@ -48,15 +48,26 @@ jobs:
        
        - name: Zip GSI  
          run: |
-              cd $GITHUB_WORKSPACE/ErfanGSIs/output
-              mkdir final
-              zip -r final/GSI.zip ./*
-       
-       - name: Upload GSI to WeTransfer
-         run: |
-              cd $GITHUB_WORKSPACE/ErfanGSIs/output
-              curl -sL https://git.io/file-transfer | sh
-              ./transfer wet ./final/GSI.zip
+              cd $GITHUB_WORKSPACE/ErfanGSIs
+              pwd
+              zip -r AB_${{ github.event.inputs.REPACK_NAME }} output/*
+              ls "AB_${{ github.event.inputs.REPACK_NAME }}"
+              echo "--------------------------------------"
+              ls
+              echo "--------------------------------------"
+              mkdir upload_ab
+              echo "--------------------------------------"
+              ls upload_ab
+              echo "--------------------------------------"
+              if [ $(ls -l AB_${{ github.event.inputs.REPACK_NAME }} | awk '{print $5}') -gt 2147483647 ]; then tar cvzpf - AB_${{ github.event.inputs.REPACK_NAME }} | split -d -b 1024m - upload_ab/AB_${{ github.event.inputs.REPACK_NAME }}; else mv AB_${{ github.event.inputs.REPACK_NAME }} upload_ab/AB_${{ github.event.inputs.REPACK_NAME }}; fi
+              echo "--------------------------------------"
+              ls upload_ab
+              echo "--------------------------------------"
 
-         
-            
+      - name: Upload to Release‌‌...
+        uses: ncipollo/release-action@v1.8.0
+        with:
+          artifacts: "${{ github.workspace }}/ErfanGSIs/upload_ab/*"
+          tag: "${{ github.event.inputs.REPACK_NAME }}_${{ env.BUILD_TIME }}"
+          bodyFile: "${{ github.workspace }}/ErfanGSIs/output/*.txt"
+          token: ${{ secrets.GITHUB_TOKEN }}
